@@ -212,7 +212,11 @@ New index has only the selected opertaors
 
 ```
 
-## Genate the ImageContentSourcePolicy
+## Genate the CatalogSource & ImageContentSourcePolicy
+
+**CatalogSource**
+
+It needs a little modification, once we use namespace 'olm-mirror', like this 'quay.example.opentlc.com:8443/olm-mirror'.
 
 ```
 # export REG_CREDS='/root/pull-secet.txt'
@@ -259,7 +263,7 @@ spec:
 ```
 **ImageContentSourcePolicy**
 
-It looks ok, do not need modification, once we use namespace like this 'quay.example.opentlc.com:8443/olm-mirror'.
+It looks ok, do not need modification, once we use namespace 'olm-mirror', like this 'quay.example.opentlc.com:8443/olm-mirror'.
 
 ```
 [root@quay mirror-operator]# head -15 manifests-storage-operator-index-1656849584/imageContentSourcePolicy.yaml 
