@@ -162,7 +162,10 @@ Session B:
   "name": "odf-operator"
 }
 
+##### below use the running index
 # opm index prune -f registry.redhat.io/redhat/certified-operator-index:v4.10 -p mcg-operator,ocs-operator,odf-csi-addons-operator,odf-operator,local-storage-operator -t quay.example.opentlc.com:8443/olm-mirror/storage-operator-index:v4.10
+
+# opm index prune -f registry.redhat.io/redhat/redhat-operator-index:v4.10 -p mcg-operator,ocs-operator,odf-csi-addons-operator,odf-operator,local-storage-operator -t quay.example.opentlc.com:8443/olm-mirror/storage-operator-index:v4.10
 
 # podman login quay.example.opentlc.com:8443
 Username: init
@@ -175,3 +178,82 @@ Login Succeeded!
 ```
 
 ![Create DNS ZONE](images/odf-01.png)
+
+**Verify the new index**
+
+
+Session A:
+```
+# podman run -p50051:50051 -it quay.example.opentlc.com:8443/olm-mirror/storage-operator-index:v4.10
+
+```
+
+Session A:
+
+New index has only the selected opertaors
+
+```
+# grpcurl -plaintext localhost:50051 api.Registry/ListPackages 
+{
+  "name": "local-storage-operator"
+}
+{
+  "name": "mcg-operator"
+}
+{
+  "name": "ocs-operator"
+}
+{
+  "name": "odf-csi-addons-operator"
+}
+{
+  "name": "odf-operator"
+}
+
+```
+
+## Genate the ImageContentSourcePolicy
+
+```
+# export REG_CREDS='/root/pull-secet.txt'
+
+# oc adm catalog mirror quay.example.opentlc.com:8443/olm-mirror/storage-operator-index:v4.10 quay.example.opentlc.com:8443/olm-mirror -a ${REG_CREDS} --index-filter-by-os='linux/amd64' --manifests-only
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! DEPRECATION NOTICE:
+!!   Sqlite-based catalogs are deprecated. Support for them will be removed in a
+!!   future release. Please migrate your catalog workflows to the new file-based
+!!   catalog format.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+src image has index label for database path: /database/index.db
+using index path mapping: /database/index.db:/tmp/1812195246
+wrote database to /tmp/1812195246
+using database at: /tmp/1812195246/index.db
+no digest mapping available for quay.example.opentlc.com:8443/olm-mirror/storage-operator-index:v4.10, skip writing to ImageContentSourcePolicy
+wrote mirroring manifests to manifests-storage-operator-index-1656838649
+deleted dir /tmp/1812195246
+
+# cat manifests-storage-operator-index-1656838649/catalogSource.yaml 
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: storage-operator-index
+  namespace: openshift-marketplace
+spec:
+  image: quay.example.opentlc.com:8443/olm-mirror/olm-mirror-storage-operator-index:v4.10
+  sourceType: grpc
+
+# vim manifests-storage-operator-index-1656838649/catalogSource.yaml 
+
+# cat manifests-storage-operator-index-1656838649/catalogSource.yaml 
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: storage-operator-index
+  namespace: openshift-marketplace
+spec:
+  image: quay.example.opentlc.com:8443/olm-mirror/storage-operator-index:v4.10
+  sourceType: grpc
+
+```
