@@ -325,3 +325,136 @@ Filesystem            Type  Size  Used Avail Use% Mounted on
 /dev/mapper/quay-lv00 xfs   512G  112G  400G  22% /opt/registry
 
 ```
+
+# Install Operator
+
+## update pull secret and cert
+
+**Update pull secret**
+
+https://access.redhat.com/solutions/5789671
+
+```
+# scp jin@quay.example.opentlc.com:~/pull-secret.txt .
+
+# oc get secret pull-secret -n openshift-config --template='{{index .data ".dockerconfigjson" | base64decode}}' >./current-pull-secret.json
+
+# cat ./current-pull-secret.json | jq .
+{
+  "auths": {
+    "cloud.openshift.com": {
+      "auth": "b3BlbnNxxxxxxxSVYwSw==",
+      "email": "jinzha@redhat.com"
+    },
+    "quay.io": {
+      "auth": "b3BlbnNoaWZ0LXVYwSw==",
+      "email": "jinzha@redhat.com"
+    },
+    "registry.connect.redhat.com": {
+      "auth": "NTEzMTcNkpnaw==",
+      "email": "jinzha@redhat.com"
+    },
+    "registry.redhat.io": {
+      "auth": "NTEzMTcxNkpnaw==",
+      "email": "jinzha@redhat.com"
+    }
+  }
+}
+
+# podman login --authfile=./auth.json quay.example.opentlc.com:8443 --tls-verify=false 
+
+# cat auth.json 
+{
+	"auths": {
+		"quay.example.opentlc.com:8443": {
+			"auth": "aW5pdDozYXhlSjdrQTV5TDRWOTFaUDh0MjZqT28wVHBkYlFEQw=="
+		}
+	}
+}
+
+# jq -c --argjson var "$(jq .auths auth.json)" '.auths += $var' ./current-pull-secret.json > merged_pullsecret.json
+
+# cat merged_pullsecret.json
+{"auths":{"cloud.openshift.com":{"auth":"b3BlbnNoaWZ0LXOVTIwSVYwSw==","email":"jinzha@redhat.com"},"quay.io":{"auth":"bXE1dGkxZ3c6VEk1TkUyVVZTVFlNVVBPT....
+
+# jq . merged_pullsecret.json 
+{
+  "auths": {
+    "cloud.openshift.com": {
+      "auth": "b3BlbnNxxxxxxxSVYwSw==",
+      "email": "jinzha@redhat.com"
+    },
+    "quay.io": {
+      "auth": "b3BlbnNoaWZ0LXVYwSw==",
+      "email": "jinzha@redhat.com"
+    },
+    "registry.connect.redhat.com": {
+      "auth": "NTEzMTcNkpnaw==",
+      "email": "jinzha@redhat.com"
+    },
+    "registry.redhat.io": {
+      "auth": "NTEzMTcxNkpnaw==",
+      "email": "jinzha@redhat.com"
+    },
+    "quay.example.opentlc.com:8443": {
+      "auth": "aW5pdDozYXhlSjdrQTV5TDRWOTFaUDh0MjZqT28wVHBkYlFEQw=="
+    }
+  }
+}
+
+# oc set data secret/pull-secret --from-file=.dockerconfigjson=/root/odf/merged_pullsecret.json -n openshift-config
+
+```
+
+**Add Quay Registry CA**
+
+
+https://access.redhat.com/solutions/5662061
+
+On Quay server:
+
+```
+[root@quay quay-rootCA]# pwd
+/opt/registry/quay/quay-rootCA
+[root@quay quay-rootCA]# ll
+total 12
+-rw-------. 1 root root 1679 Jul  3 06:48 rootCA.key
+-rw-r--r--. 1 root root 1383 Jul  3 06:48 rootCA.pem
+-rw-r--r--. 1 root root   41 Jul  3 06:48 rootCA.srl
+
+# cp rootCA.pem /tmp/rootCA.pem
+
+# chown jin /tmp/rootCA.pem
+
+```
+
+Copy the CA file to the local server
+
+```
+# scp jin@quay.example.opentlc.com:/tmp/rootCA.pem .
+
+oc create configmap registry-cas -n openshift-config \
+--from-file=quay.example.opentlc.com..8443=/etc/docker/certs.d/quay.example.opentlc.com:8443/ca.crt \
+--from-file=otherregistry.com=/etc/docker/certs.d/otherregistry.com/ca.crt
+
+```
+
+## disble
+
+```
+# oc patch OperatorHub cluster --type json \
+      -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
+
+# cat catalogSource.yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: storage-operator-index
+  namespace: openshift-marketplace
+spec:
+  image: quay.example.opentlc.com:8443/olm-mirror/olm-mirror-storage-operator-index:v4.10
+  sourceType: grpc
+
+# oc project openshift-config
+
+```
