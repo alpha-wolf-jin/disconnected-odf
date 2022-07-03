@@ -188,7 +188,7 @@ Session A:
 
 ```
 
-Session A:
+Session B:
 
 New index has only the selected opertaors
 
@@ -256,4 +256,27 @@ spec:
   image: quay.example.opentlc.com:8443/olm-mirror/storage-operator-index:v4.10
   sourceType: grpc
 
+```
+**ImageContentSourcePolicy**
+
+It looks ok, do not need modification, once we use namespace like this 'quay.example.opentlc.com:8443/olm-mirror'.
+
+```
+[root@quay mirror-operator]# head -15 manifests-storage-operator-index-1656849584/imageContentSourcePolicy.yaml 
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  labels:
+    operators.openshift.org/catalog: "true"
+  name: storage-operator-index-0
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - quay.example.opentlc.com:8443/olm-mirror/odf4-mcg-rhel8-operator
+    source: registry.redhat.io/odf4/mcg-rhel8-operator
+  - mirrors:
+    - quay.example.opentlc.com:8443/olm-mirror/openshift4-ose-csi-external-resizer
+    source: registry.redhat.io/openshift4/ose-csi-external-resizer
+...
 ```
