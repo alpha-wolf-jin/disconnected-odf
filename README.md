@@ -320,4 +320,8 @@ drwxr-xr-x. 8 root root 93 Jul  3 12:26 v2/local/index/olm-mirror/storage-operat
 
 # oc adm catalog mirror file://local/index/olm-mirror/storage-operator-index:v4.10 quay.example.opentlc.com:8443/olm-mirror -a /root/pull-secet.txt --index-filter-by-os='.*'
 
+# df -Th /opt/registry/
+Filesystem            Type  Size  Used Avail Use% Mounted on
+/dev/mapper/quay-lv00 xfs   512G  112G  400G  22% /opt/registry
+
 ```
