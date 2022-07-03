@@ -284,3 +284,21 @@ spec:
     source: registry.redhat.io/openshift4/ose-csi-external-resizer
 ...
 ```
+
+## Dowload the operators' images to local disk
+
+```
+[root@quay mirror-operator]# pwd
+/opt/registry/mirror-operator
+
+[root@quay mirror-operator]# ll
+total 8
+drwxr-xr-x. 2 root root   88 Jul  3 11:59 manifests-storage-operator-index-1656849584
+-rw-r--r--. 1 root root 3226 Jul  3 08:24 packages.out
+-rw-r--r--. 1 root root  166 Jul  3 08:28 selected-operators.txt
+[root@quay mirror-operator]# 
+
+# oc adm catalog mirror quay.example.opentlc.com:8443/olm-mirror/storage-operator-index:v4.10 file:///local/index -a /root/pull-secet.txt --index-filter-by-os='linux/amd64'
+
+
+```
