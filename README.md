@@ -300,5 +300,24 @@ drwxr-xr-x. 2 root root   88 Jul  3 11:59 manifests-storage-operator-index-16568
 
 # oc adm catalog mirror quay.example.opentlc.com:8443/olm-mirror/storage-operator-index:v4.10 file:///local/index -a /root/pull-secet.txt --index-filter-by-os='linux/amd64'
 
+[root@quay mirror-operator]# ll
+total 8
+drwxr-xr-x. 2 root root   88 Jul  3 11:59 manifests-storage-operator-index-1656849584
+drwxr-xr-x. 2 root root   25 Jul  3 12:26 manifests-storage-operator-index-1656850468
+-rw-r--r--. 1 root root 3226 Jul  3 08:24 packages.out
+-rw-r--r--. 1 root root  166 Jul  3 08:28 selected-operators.txt
+drwxr-xr-x. 3 root root   19 Jul  3 12:17 v2
+[root@quay mirror-operator]# du -sk ./v2
+54099840	./v2
+
+```
+
+## Upload the images to quay mirror registry from local disk
+
+```
+# ll -d v2/local/index/olm-mirror/storage-operator-index/
+drwxr-xr-x. 8 root root 93 Jul  3 12:26 v2/local/index/olm-mirror/storage-operator-index/
+
+# oc adm catalog mirror file://local/index/olm-mirror/storage-operator-index:v4.10 quay.example.opentlc.com:8443/olm-mirror -a /root/pull-secet.txt --index-filter-by-os='.*'
 
 ```
