@@ -411,6 +411,8 @@ https://access.redhat.com/solutions/5789671
 
 https://access.redhat.com/solutions/5662061
 
+https://access.redhat.com/solutions/4654511
+
 On Quay server:
 
 ```
@@ -431,14 +433,103 @@ total 12
 Copy the CA file to the local server
 
 ```
+# pwd
+/root/odf
+
 # scp jin@quay.example.opentlc.com:/tmp/rootCA.pem .
+
 
 oc create configmap registry-cas -n openshift-config \
 --from-file=quay.example.opentlc.com..8443=/etc/docker/certs.d/quay.example.opentlc.com:8443/ca.crt \
 --from-file=otherregistry.com=/etc/docker/certs.d/otherregistry.com/ca.crt
 
+# oc create configmap registry-cas -n openshift-config --from-file=quay.example.opentlc.com..8443=/root/odf/rootCA.pem
+
+# oc get configmap registry-cas -o yaml
+apiVersion: v1
+data:
+  quay.example.opentlc.com..8443: |
+    -----BEGIN CERTIFICATE-----
+    MIIDzzCCAregAwIBAgIUYkCFPv4cKElb5MB4aGP9YRDzGfMwDQYJKoZIhvcNAQEL
+    BQAwcjELMAkGA1UEBhMCVVMxCzAJBgNVBAgMAlZBMREwDwYDVQQHDAhOZXcgWW9y
+    azENMAsGA1UECgwEUXVheTERMA8GA1UECwwIRGl2aXNpb24xITAfBgNVBAMMGHF1
+    YXkuZXhhbXBsZS5vcGVudGxjLmNvbTAeFw0yMjA3MDMwNjQ4MjZaFw0yNTA0MjIw
+    NjQ4MjZaMHIxCzAJBgNVBAYTAlVTMQswCQYDVQQIDAJWQTERMA8GA1UEBwwITmV3
+    IFlvcmsxDTALBgNVBAoMBFF1YXkxETAPBgNVBAsMCERpdmlzaW9uMSEwHwYDVQQD
+    DBhxdWF5LmV4YW1wbGUub3BlbnRsYy5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IB
+    DwAwggEKAoIBAQC3IWAwTzQs+WDhcNgw3P0yL/c+weP793knu2dP1DsJDdoF3iuL
+    6r4EQzbYm2DKW3zOvJO9+gq8LF9/odYNzKqMYy+7tQjdC+pLhIXxa9XZbAvQLuq0
+    +evlHlwo+FQG5SSv1EkcViv24KiES6uRQqJlzQvnUaSZbHl681H4O66r2ED03mYg
+    2evsP1HOQ2yFCN0L/ggalyJ7q/ENnnVvUTjCcEGzXxlCFIWmt/YyihjbPjQkJdTT
+    LRhPunD9v3iCr3rv8/HoihlLlpmwfa2t5G5uY+UAnTeBYpzIHHuSTHonDftiYdSW
+    xLMTrEBcXsjb+Qox2Faf46mwCmSiC/5MuZ07AgMBAAGjXTBbMAsGA1UdDwQEAwIC
+    5DATBgNVHSUEDDAKBggrBgEFBQcDATAjBgNVHREEHDAaghhxdWF5LmV4YW1wbGUu
+    b3BlbnRsYy5jb20wEgYDVR0TAQH/BAgwBgEB/wIBATANBgkqhkiG9w0BAQsFAAOC
+    AQEAd2rqG4tfnzmQYP6WK/7qMzlOfmNu953YpEbtZBtf3zHhar4v0FwFlWhLx8t6
+    ANpJ+3I/LCmbXFQbbWget0Vb1oCAqb4Ncj8yYSv0RB/DqIh05PIar5GZ1ePjRMqc
+    tM3uMJTDyUguSJB0H6hfplhXodW2bcm/m56Q/PqNJ7G2qWPK2heHnTjMO8a/7gMj
+    orCxNMajdyL/xz1QSq7UU6Klkxpj6vFNe/Pi1/ppgyYsSzFWFCXQ3lcdllOfLhxB
+    rQ149b5DPnHwH97CrzgHuKwg7JFoInmIJ6ymM7MIM9Fo1l8W2dsyMHPq+8sPZtz5
+    D8CvD0VgoDk3etadaI/pGbk9PA==
+    -----END CERTIFICATE-----
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2022-07-04T02:01:23Z"
+  name: registry-cas
+  namespace: openshift-config
+  resourceVersion: "442177"
+  uid: c535cc8e-6f1b-4233-9e10-409a4cf0f599
+
+# oc patch image.config.openshift.io/cluster --patch '{"spec":{"additionalTrustedCA":{"name":"registry-cas"}}}' --type=merge
+
+# oc get image.config.openshift.io/cluster -o yaml
+apiVersion: config.openshift.io/v1
+kind: Image
+metadata:
+  annotations:
+    include.release.openshift.io/ibm-cloud-managed: "true"
+    include.release.openshift.io/self-managed-high-availability: "true"
+    include.release.openshift.io/single-node-developer: "true"
+    release.openshift.io/create-only: "true"
+  creationTimestamp: "2022-07-03T06:18:17Z"
+  generation: 2
+  name: cluster
+  ownerReferences:
+  - apiVersion: config.openshift.io/v1
+    kind: ClusterVersion
+    name: version
+    uid: 0bdd9809-23a1-4f17-9eca-5d7d9be331b2
+  resourceVersion: "443047"
+  uid: 4e3d2385-0933-4471-ab35-ef0be6071b8d
+spec:
+  additionalTrustedCA:
+    name: registry-cas
+status:
+  internalRegistryHostname: image-registry.openshift-image-registry.svc:5000
+
+
+# oc edit image.config.openshift.io/cluster 
+...
+spec:
+  additionalTrustedCA:
+    name: registry-cas
+  registrySources:
+    allowedRegistries:
+    - quay.example.opentlc.com:8443
+...
+
 ```
 
+```
+# hostname 
+aro-68822-master-0
+
+# pwd
+/etc/containers/certs.d
+
+sh-4.4# ls -l
+total 0
+```
 ## disble
 
 ```
