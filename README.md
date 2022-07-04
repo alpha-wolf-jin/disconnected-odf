@@ -703,4 +703,6 @@ master   rendered-master-d6ae21c89b91075cc2e823699862d534   True      False     
 worker   rendered-worker-3fd309422aa36e7633c7d6acd382427e   True      False      False      3              3                   3                     0                      21h
 ```
 
->Note: I change the /etc/hosts file to include `20.55.58.122  quay.example.opentlc.com` due to firewal
+> Note: I change the /etc/hosts file to include `20.55.58.122  quay.example.opentlc.com` due to firewall
+
+
