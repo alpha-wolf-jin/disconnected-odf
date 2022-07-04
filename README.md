@@ -740,3 +740,113 @@ Install `OpenShift Data Foundation`
 => Click `Create StorageSystem` button
 
 > Note: It shows error page `404: Page Not Found`
+
+
+```
+# oc project openshift-storage
+
+
+# oc get event --sort-by='{.lastTimestamp}' | grep -v " Normal "
+LAST SEEN   TYPE      REASON                         OBJECT                                                                     MESSAGE
+11m         Warning   FailedScheduling               pod/noobaa-db-pg-0                                                         0/6 nodes are available: 6 pod has unbound immediate PersistentVolumeClaims.
+14m         Warning   FailedScheduling               pod/rook-ceph-mon-a-78598ccdc4-pm9z6                                       0/6 nodes are available: 1 node(s) didn't match pod anti-affinity rules, 2 node(s) didn't match Pod's node affinity/selector, 3 node(s) had taint {node-role.kubernetes.io/master: }, that the pod didn't tolerate.
+23m         Warning   FailedMount                    pod/odf-console-65685ddfd5-h8rhq                                           MountVolume.SetUp failed for volume "odf-console-serving-cert" : secret "odf-console-serving-cert" not found
+14m         Warning   ReconcileFailed                storagesystem/ocs-storagecluster-storagesystem                             StorageCluster.ocs.openshift.io "ocs-storagecluster" not found
+14m         Warning   ReconcileFailed                storagesystem/ocs-storagecluster-storagesystem                             Operation cannot be fulfilled on storageclusters.ocs.openshift.io "ocs-storagecluster": the object has been modified; please apply your changes to the latest version and try again
+14m         Warning   FailedToUpdateEndpoint         endpoints/csi-rbdplugin-metrics                                            Failed to update endpoint openshift-storage/csi-rbdplugin-metrics: Operation cannot be fulfilled on endpoints "csi-rbdplugin-metrics": the object has been modified; please apply your changes to the latest version and try again
+10m         Warning   Unhealthy                      pod/noobaa-endpoint-d8f58d469-w8wzq                                        Readiness probe failed: dial tcp 10.129.2.30:6001: connect: connection refused
+9m14s       Warning   FailedGetResourceMetric        horizontalpodautoscaler/noobaa-endpoint                                    failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+9m14s       Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/noobaa-endpoint                                    invalid metrics (1 invalid out of 1), first error is: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+6m58s       Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/noobaa-endpoint                                    invalid metrics (1 invalid out of 1), first error is: failed to get cpu utilization: did not receive metrics for any ready pods
+6m43s       Warning   FailedGetResourceMetric        horizontalpodautoscaler/noobaa-endpoint                                    failed to get cpu utilization: did not receive metrics for any ready pods
+
+# oc get pod noobaa-db-pg-0
+NAME             READY   STATUS    RESTARTS   AGE
+noobaa-db-pg-0   1/1     Running   0          14m
+
+# oc get pod | grep rook-ceph-mon
+rook-ceph-mon-a-78598ccdc4-pm9z6                                  2/2     Running     0          17m
+rook-ceph-mon-b-55878dfdd8-jfmxq                                  2/2     Running     0          17m
+rook-ceph-mon-c-67fb7448f5-wdsb6                                  2/2     Running     0          17m
+
+# oc get secret | grep odf-console-serving-cert
+odf-console-serving-cert                                                    kubernetes.io/tls                     2      28m
+
+# oc get storagesystem/ocs-storagecluster-storagesystem
+NAME                               STORAGE-SYSTEM-KIND                  STORAGE-SYSTEM-NAME
+ocs-storagecluster-storagesystem   storagecluster.ocs.openshift.io/v1   ocs-storagecluster
+
+# oc describe storagesystem/ocs-storagecluster-storagesystem
+...
+Events:
+  Type     Reason           Age   From                      Message
+  ----     ------           ----  ----                      -------
+  Warning  ReconcileFailed  20m   StorageSystem controller  StorageCluster.ocs.openshift.io "ocs-storagecluster" not found
+  Warning  ReconcileFailed  20m   StorageSystem controller  Operation cannot be fulfilled on storageclusters.ocs.openshift.io "ocs-storagecluster": the object has been modified; please apply your changes to the latest version and try again
+
+# oc get  StorageCluster.ocs.openshift.io
+NAME                 AGE   PHASE         EXTERNAL   CREATED AT             VERSION
+ocs-storagecluster   23m   Progressing              2022-07-04T07:11:30Z   4.10.0
+
+# oc describe StorageCluster.ocs.openshift.io ocs-storagecluster
+
+    Message:               Waiting on Nooba instance to finish initialization
+    Reason:                NoobaaInitializing
+    Status:                True
+    Type:                  Progressing
+    Last Heartbeat Time:   2022-07-04T07:11:30Z
+    Last Transition Time:  2022-07-04T07:11:30Z
+    Message:               Initializing StorageCluster
+    Reason:                Init
+    Status:                False
+    Type:                  Degraded
+    Last Heartbeat Time:   2022-07-04T07:11:30Z
+    Last Transition Time:  2022-07-04T07:11:30Z
+    Message:               Initializing StorageCluster
+    Reason:                Init
+    Status:                Unknown
+    Type:                  Upgradeable
+
+# oc get pod | grep -i Nooba
+noobaa-core-0                                                     1/1     Running     0          25m
+noobaa-db-pg-0                                                    1/1     Running     0          25m
+noobaa-endpoint-d8f58d469-w8wzq                                   1/1     Running     0          23m
+noobaa-operator-568f79d7f-l58c7                                   1/1     Running     0          37m
+
+# oc logs  noobaa-operator-568f79d7f-l58c7
+...
+time="2022-07-04T07:49:32Z" level=warning msg="⏳ Temporary Error: failed to start creating storage account: storage.AccountsClient#Create: Failure sending request: StatusCode=403 -- Original Error: Code=\"AuthorizationFailed\" Message=\"The client '055fd1df-fd96-4135-9911-8256047168c8' with object id '055fd1df-fd96-4135-9911-8256047168c8' does not have authorization to perform action 'Microsoft.Storage/storageAccounts/write' over scope '/subscriptions/ede7f891-835c-4128-af5b-0e53848e54e7/resourceGroups/aro-xxrms-rg/providers/Microsoft.Storage/storageAccounts/noobaaaccountb1cfw' or the scope is invalid. If access was recently granted, please refresh your credentials.\"" sys=openshift-storage/noobaa
+
+
+```
+> Note: aro-xxrms-rg is not used, auto generated by cluster. Current is openenv-5xkm2  resource group
+
+
+```
+# oc get secret noobaa-azure-cloud-creds-secret -o yaml
+apiVersion: v1
+data:
+  azure_client_id: MmE5M2UzYjYtOTE4Yy00OWMwLTg4YjQtMjhjZWM4ZDFjNDRh
+  azure_client_secret: dG50VE9yMU1tVENiUUt5LlRUMlM3b2YwWH5+dTUybWttUQ==
+  azure_region: ZWFzdHVz
+  azure_resource_prefix: YXJvLXh4cm1z
+  azure_resourcegroup: YXJvLXh4cm1zLXJn
+  azure_subscription_id: ZWRlN2Y4OTEtODM1Yy00MTI4LWFmNWItMGU1Mzg0OGU1NGU3
+  azure_tenant_id: MWNlNzg1MmYtZGNmMy00MmJjLWFmZTYtM2JmODFhYjk4NGZi
+kind: Secret
+metadata:
+  annotations:
+    cloudcredential.openshift.io/credentials-request: openshift-storage/noobaa-azure-cloud-creds
+  creationTimestamp: "2022-07-04T07:14:27Z"
+  name: noobaa-azure-cloud-creds-secret
+  namespace: openshift-storage
+  resourceVersion: "84345"
+  uid: ab863f95-167b-4911-ba6b-9f4d6a472ee1
+type: Opaque
+[root@localhost odf]# echo YXJvLXh4cm1zLXJn | base64 -d
+aro-xxrms-rg
+
+# oc set data secret/noobaa-azure-cloud-creds-secret azure_resourcegroup=openenv-5xkm2
+
+
+```
