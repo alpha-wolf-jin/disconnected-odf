@@ -848,5 +848,9 @@ aro-xxrms-rg
 
 # oc set data secret/noobaa-azure-cloud-creds-secret azure_resourcegroup=openenv-5xkm2
 
+# oc set data secret/noobaa-azure-container-creds azure_resourcegroup=openenv-5xkm2
+
+# oc delete pod  noobaa-operator-568f79d7f-l58c7
+
 
 ```
