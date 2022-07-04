@@ -696,9 +696,8 @@ spec:
 99-master-nameserver                                                                          2.2.0             19s
 99-worker-nameserver                                                                          2.2.0             17m
 
+### Until...
 # oc get mcp
 NAME     CONFIG                                             UPDATED   UPDATING   DEGRADED   MACHINECOUNT   READYMACHINECOUNT   UPDATEDMACHINECOUNT   DEGRADEDMACHINECOUNT   AGE
-master   rendered-master-4122f3c621fcf0f8d292d82442756448   False     True       False      3              0                   0                     0                      20h
-worker   rendered-worker-3fd309422aa36e7633c7d6acd382427e   True      False      False      3              3                   3                     0                      20h
-
-```
+master   rendered-master-d6ae21c89b91075cc2e823699862d534   True      False      False      3              3                   3                     0                      21h
+worker   rendered-worker-3fd309422aa36e7633c7d6acd382427e   True      False      False      3              3                   3                     0                      21h
