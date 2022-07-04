@@ -507,19 +507,9 @@ spec:
 status:
   internalRegistryHostname: image-registry.openshift-image-registry.svc:5000
 
-
-# oc edit image.config.openshift.io/cluster 
-...
-spec:
-  additionalTrustedCA:
-    name: registry-cas
-  registrySources:
-    allowedRegistries:
-    - quay.example.opentlc.com:8443
-...
-
 ```
 
+**Verify the Cert on Master node**
 ```
 # hostname 
 aro-68822-master-0
