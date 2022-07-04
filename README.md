@@ -1108,5 +1108,44 @@ spec:
 
 # oc apply -f catalogSource.yaml 
 
+# oc get pod -o wide
+NAME                                                              READY   STATUS             RESTARTS        AGE     IP            NODE                        NOMINATED NODE   READINESS GATES
+quay-operator-index-2rf26                                         0/1     ImagePullBackOff   0               96s     10.131.0.30   aro-xxrms-worker-eastus-3   <none>           <none>
 
 ```
+
+**Manually to update /etc/hosts on worker 3**
+
+```
+# oc get pod
+
+quay-operator-index-2rf26                                         1/1     Running     0               12m
+
+```
+
+# Install Quay operator from web
+
+```
+# oc new-project quay
+
+
+# oc project openshift-operators
+
+# oc get InstallPlan
+NAME            CSV                    APPROVAL    APPROVED
+install-z8l9k   quay-operator.v3.7.2   Automatic   true
+
+sh-4.4# cat /etc/containers/registries.conf
+unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
+short-name-mode = ""
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/quay/clair-rhel8"
+  mirror-by-digest-only = true
+
+  [[registry.mirror]]
+    location = "quay.example.opentlc.com:8443/olm-mirror/quay-clair-rhel8"
+
+```
+https://access.redhat.com/RegistryAuthentication
