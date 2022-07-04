@@ -856,6 +856,11 @@ aro-xxrms-rg
 
 
 ```
+# Verify ODF
+
+Below result is the same as the succesful ODF instaslling in connectione environement.
+
+But in disconnected environment, the 'Data Foumdation' under `Storage` is not there.
 
 ```
 # oc get StorageSystem ocs-storagecluster-storagesystem -o yaml -n openshift-storage
