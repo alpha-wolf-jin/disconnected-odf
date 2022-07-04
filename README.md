@@ -915,4 +915,198 @@ status:
 ...
 Events:                    <none>
 
+# oc get pod | grep operator
+noobaa-operator-568f79d7f-26lwb                                   1/1     Running     0          4h4m
+ocs-operator-94985c79c-d4dl5                                      1/1     Running     0          5h31m
+odf-operator-controller-manager-57977dfd-qwwnh                    2/2     Running     0          5h31m
+rook-ceph-operator-578f567c57-dvdjl                               1/1     Running     0          5h31m
+
+# oc logs -f noobaa-operator-568f79d7f-26lwb
+no error
+
+# oc logs -f rook-ceph-operator-578f567c57-dvdjl
+
+oc logs -f ocs-operator-94985c79c-d4dl5
+
+oc logs -f odf-operator-controller-manager-57977dfd-qwwnh -c manager
+
+oc logs -f odf-operator-controller-manager-57977dfd-qwwnh -c kube-rbac-proxy
+
+```
+
+# Download and Upload quay operator on quay registry server
+
+```
+# mkdir quay
+
+# cd quay
+
+# opm index prune -f registry.redhat.io/redhat/redhat-operator-index:v4.10 -p quay-operator -t quay.example.opentlc.com:8443/olm-mirror/quay-operator-index:v4.10
+
+# podman push quay.example.opentlc.com:8443/olm-mirror/quay-operator-index:v4.10
+
+# oc adm catalog mirror quay.example.opentlc.com:8443/olm-mirror/quay-operator-index:v4.10 quay.example.opentlc.com:8443/olm-mirror -a ${REG_CREDS} --index-filter-by-os='linux/amd64' --manifests-only
+
+# ll manifests-quay-operator-index-1656938547
+total 28
+-rwxr-xr-x. 1 root root   247 Jul  4 12:42 catalogSource.yaml
+-rwxr-xr-x. 1 root root  1547 Jul  4 12:42 imageContentSourcePolicy.yaml
+-rw-r--r--. 1 root root 19865 Jul  4 12:42 mapping.txt
+
+# vim manifests-quay-operator-index-1656938547/catalogSource.yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: quay-operator-index
+  namespace: openshift-marketplace
+spec:
+  image: quay.example.opentlc.com:8443/olm-mirror/quay-operator-index:v4.10
+  sourceType: grpc
+
+# oc adm catalog mirror quay.example.opentlc.com:8443/olm-mirror/quay-operator-index:v4.10 file:///local/index -a /root/pull-secet.txt --index-filter-by-os='linux/amd64'
+
+# ll
+total 0
+drwxr-xr-x. 2 root root 88 Jul  4 12:43 manifests-quay-operator-index-1656938547
+drwxr-xr-x. 2 root root 25 Jul  4 12:51 manifests-quay-operator-index-1656938710
+drwxr-xr-x. 3 root root 19 Jul  4 12:45 v2
+
+# ll  v2/local/index/olm-mirror/quay-operator-index/
+total 4
+drwxr-xr-x. 2 root root 4096 Jul  4 12:46 blobs
+drwxr-xr-x. 2 root root   98 Jul  4 12:46 manifests
+drwxr-xr-x. 9 root root  188 Jul  4 12:51 quay
+drwxr-xr-x. 5 root root   57 Jul  4 12:46 rhel8
+
+# oc adm catalog mirror file://local/index/olm-mirror/quay-operator-index:v4.10 quay.example.opentlc.com:8443/olm-mirror -a /root/pull-secet.txt --index-filter-by-os='.*'
+
+
+```
+
+# Install Qauy on OC client server
+
+```
+# mkdir quay
+
+# cd quay
+
+# vim catalogSource.yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: quay-operator-index
+  namespace: openshift-marketplace
+spec:
+  image: quay.example.opentlc.com:8443/olm-mirror/quay-operator-index:v4.10
+  sourceType: grpc
+
+# oc apply -f catalogSource.yaml
+
+# vim imageContentSourcePolicy.yaml
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  labels:
+    operators.openshift.org/catalog: "true"
+  name: quay-operator-index-0
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - quay.example.opentlc.com:8443/olm-mirror/quay-clair-rhel8
+    source: registry.redhat.io/quay/clair-rhel8
+  - mirrors:
+    - quay.example.opentlc.com:8443/olm-mirror/quay-quay-builder-rhel8
+    source: registry.redhat.io/quay/quay-builder-rhel8
+  - mirrors:
+    - quay.example.opentlc.com:8443/olm-mirror/quay-quay-builder-qemu-rhcos-rhel8
+    source: registry.redhat.io/quay/quay-builder-qemu-rhcos-rhel8
+  - mirrors:
+    - quay.example.opentlc.com:8443/olm-mirror/quay-quay-operator-bundle
+    source: registry.redhat.io/quay/quay-operator-bundle
+  - mirrors:
+    - quay.example.opentlc.com:8443/olm-mirror/quay-quay-rhel8
+    source: registry.redhat.io/quay/quay-rhel8
+  - mirrors:
+    - quay.example.opentlc.com:8443/olm-mirror/rhel8-redis-6
+    source: registry.redhat.io/rhel8/redis-6
+  - mirrors:
+    - quay.example.opentlc.com:8443/olm-mirror/quay-quay-rhel8-operator
+    source: registry.redhat.io/quay/quay-rhel8-operator
+  - mirrors:
+    - quay.example.opentlc.com:8443/olm-mirror/rhel8-postgresql-10
+    source: registry.redhat.io/rhel8/postgresql-10
+  - mirrors:
+    - quay.example.opentlc.com:8443/olm-mirror/quay-quay-operator-rhel8
+    source: registry.redhat.io/quay/quay-operator-rhel8
+  - mirrors:
+    - quay.example.opentlc.com:8443/olm-mirror/rhel8-redis-5
+    source: registry.redhat.io/rhel8/redis-5
+
+
+# oc apply -f imageContentSourcePolicy.yaml 
+
+# oc project openshift-marketplace
+
+# oc describe pod quay-operator-index-wpr75
+...
+Events:
+  Type     Reason            Age                  From               Message
+  ----     ------            ----                 ----               -------
+  Warning  FailedScheduling  4m29s                default-scheduler  0/6 nodes are available: 3 node(s) had taint {node-role.kubernetes.io/master: }, that the pod didn't tolerate, 3 node(s) had taint {node.ocs.openshift.io/storage: true}, that the pod didn't tolerate.
+  Warning  FailedScheduling  2m5s (x1 over 3m5s)  default-scheduler  0/6 nodes are available: 3 node(s) had taint {node-role.kubernetes.io/master: }, that the pod didn't tolerate, 3 node(s) had taint {node.ocs.openshift.io/storage: true}, that the pod didn't tolerate.
+
+# oc explain CatalogSource.spec.grpcPodConfig
+KIND:     CatalogSource
+VERSION:  operators.coreos.com/v1alpha1
+
+RESOURCE: grpcPodConfig <Object>
+
+DESCRIPTION:
+     GrpcPodConfig exposes different overrides for the pod spec of the
+     CatalogSource Pod. Only used when SourceType = SourceTypeGrpc and Image is
+     set.
+
+FIELDS:
+   nodeSelector	<map[string]string>
+     NodeSelector is a selector which must be true for the pod to fit on a node.
+     Selector which must match a node's labels for the pod to be scheduled on
+     that node.
+
+   priorityClassName	<string>
+     If specified, indicates the pod's priority. If not specified, the pod
+     priority will be default or zero if there is no default.
+
+   tolerations	<[]Object>
+     Tolerations are the catalog source's pod's tolerations.
+
+# oc edit node aro-xxrms-worker-eastus-1
+...
+spec:
+  ...
+  taints:
+  - effect: NoSchedule
+    key: node.ocs.openshift.io/storage
+    value: "true"
+
+
+# vi catalogSource.yaml 
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: quay-operator-index
+  namespace: openshift-marketplace
+spec:
+  grpcPodConfig:
+    tolerations:
+    - key: node.ocs.openshift.io/storage
+      operator: "Equal"
+      value: "true"
+      effect: NoSchedule
+  image: quay.example.opentlc.com:8443/olm-mirror/quay-operator-index:v4.10
+  sourceType: grpc
+
+# oc apply -f catalogSource.yaml 
+
+
 ```
