@@ -705,4 +705,38 @@ worker   rendered-worker-3fd309422aa36e7633c7d6acd382427e   True      False     
 
 > Note: I change the /etc/hosts file to include `20.55.58.122  quay.example.opentlc.com` due to firewall
 
+Add the 512 GB HHD to each worker nodes
 
+Install local storage operator
+
+`Operators` => `Installed Operators` => Click `LocalStorage` 
+
+=> Click `Local Volume Discovery` => Click `Create Local Volume Discovery` button
+
+=> Check `Disks on selected nodes` => Check worker nodes => Click `Create` button
+
+Install `OpenShift Data Foundation`
+
+=> Click `Create StorageSystem` button
+
+=> Select `Create a new StorageClass using local storage devices` => Click `Next` Button
+
+=>
+ fill `LocalVolumeSet name`  with "odflocalvolum01"
+ Select `Disks on selected nodes`
+ Click `Next` Button
+
+=>
+ Select `Taint node`
+ `The selected nodes do not match OpenShift Data Foundation's StorageCluster requirement of an aggregated 30 CPUs and 72 GiB of RAM. If the selection cannot be modified a minimal cluster will be deployed.`
+ 
+ Click `Next` Button
+
+=>
+ Select `Enable data encryption for block and file storage`
+ Select `Cluster-wide encryption`
+ Click `Next` Button
+
+=> Click `Create StorageSystem` button
+
+> Note: It shows error page `404: Page Not Found`
