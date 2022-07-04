@@ -741,6 +741,8 @@ Install `OpenShift Data Foundation`
 
 > Note: It shows error page `404: Page Not Found`
 
+Warning alert:Web console update is available
+There has been an update to the web console. Ensure any changes have been saved and refresh your browser to access the latest version.
 
 ```
 # oc project openshift-storage
@@ -852,5 +854,60 @@ aro-xxrms-rg
 
 # oc delete pod  noobaa-operator-568f79d7f-l58c7
 
+
+```
+
+```
+# oc get StorageSystem ocs-storagecluster-storagesystem -o yaml -n openshift-storage
+
+apiVersion: odf.openshift.io/v1alpha1
+kind: StorageSystem
+metadata:
+  creationTimestamp: "2022-07-04T07:11:30Z"
+  finalizers:
+  - storagesystem.odf.openshift.io
+  generation: 1
+  name: ocs-storagecluster-storagesystem
+  namespace: openshift-storage
+  resourceVersion: "80985"
+  uid: 1dd5ab62-e458-4cde-aa43-e439f3421a3e
+spec:
+  kind: storagecluster.ocs.openshift.io/v1
+  name: ocs-storagecluster
+  namespace: openshift-storage
+status:
+  conditions:
+  - lastHeartbeatTime: "2022-07-04T07:11:30Z"
+    lastTransitionTime: "2022-07-04T07:11:30Z"
+    message: Reconcile is completed successfully
+    reason: ReconcileCompleted
+    status: "True"
+    type: Available
+  - lastHeartbeatTime: "2022-07-04T07:11:30Z"
+    lastTransitionTime: "2022-07-04T07:11:30Z"
+    message: Reconcile is completed successfully
+    reason: ReconcileCompleted
+    status: "False"
+    type: Progressing
+  - lastHeartbeatTime: "2022-07-04T07:11:30Z"
+    lastTransitionTime: "2022-07-04T07:11:30Z"
+    message: StorageSystem CR is valid
+    reason: Valid
+    status: "False"
+    type: StorageSystemInvalid
+  - lastHeartbeatTime: "2022-07-04T07:11:30Z"
+    lastTransitionTime: "2022-07-04T07:11:30Z"
+    reason: Ready
+    status: "True"
+    type: VendorCsvReady
+  - lastHeartbeatTime: "2022-07-04T07:11:30Z"
+    lastTransitionTime: "2022-07-04T07:11:30Z"
+    reason: Found
+    status: "True"
+    type: VendorSystemPresent
+
+# oc describe StorageSystem ocs-storagecluster-storagesystem
+...
+Events:                    <none>
 
 ```
