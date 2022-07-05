@@ -1183,3 +1183,9 @@ No resources found in openshift-operators namespace.
 
 
 ```
+
+![Create DNS ZONE](images/odf-02.png)
+
+![Create DNS ZONE](images/odf-03.png)
+
+![Create DNS ZONE](images/odf-04.png)
