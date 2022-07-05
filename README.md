@@ -1148,4 +1148,38 @@ short-name-mode = ""
     location = "quay.example.opentlc.com:8443/olm-mirror/quay-clair-rhel8"
 
 ```
-https://access.redhat.com/RegistryAuthentication
+
+https://access.redhat.com/solutions/6459071
+
+```
+# oc -n openshift-operators get InstallPlan 
+NAME            CSV                    APPROVAL    APPROVED
+install-44g2n   quay-operator.v3.7.2   Automatic   true
+
+# oc -n openshift-operators get InstallPlan install-44g2n -o yaml
+
+  conditions:
+  - lastTransitionTime: "2022-07-04T15:32:21Z"
+    lastUpdateTime: "2022-07-04T15:32:21Z"
+    message: 'Bundle unpacking failed. Reason: DeadlineExceeded, and Message: Job
+      was active longer than specified deadline'
+
+# oc get job -n openshift-marketplace -o json | jq -r '.items[] | select(.spec.template.spec.containers[].env[].value|contains ("quay-operator")) | .metadata.name'
+2142aceb6381b3fade0cf496b8b0825b4597a2785579201bbd69aab35a5bfc4
+
+# oc delete job 2142aceb6381b3fade0cf496b8b0825b4597a2785579201bbd69aab35a5bfc4 -n openshift-marketplace
+
+# oc delete configmap 2142aceb6381b3fade0cf496b8b0825b4597a2785579201bbd69aab35a5bfc4 -n openshift-marketplace
+
+# oc get sub -n openshift-operators
+NAME            PACKAGE         SOURCE                CHANNEL
+quay-operator   quay-operator   quay-operator-index   stable-3.7
+
+# oc get csv -n openshift-operators
+No resources found in openshift-operators namespace.
+
+# oc delete install-44g2n -n openshift-operators
+
+
+
+```
