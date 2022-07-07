@@ -1189,3 +1189,138 @@ No resources found in openshift-operators namespace.
 ![Create DNS ZONE](images/odf-03.png)
 
 ![Create DNS ZONE](images/odf-04.png)
+
+> Uninstall quay and re-install in quay project
+
+> Found quay is not using noobaa
+
+https://access.redhat.com/solutions/6131741
+
+https://access.redhat.com/documentation/en-us/red_hat_quay/3.6/html/deploy_red_hat_quay_on_openshift_with_the_quay_operator/operator-preconfigure
+
+```
+# oc project quay
+
+# oc get QuayRegistry
+NAME               AGE
+example-registry   106m
+
+# oc get QuayRegistry example-registry -o yaml | grep configBundleSecret
+  configBundleSecret: example-registry-config-bundle-zxgw7
+
+# oc get secret example-registry-config-bundle-zxgw7 -o yaml
+apiVersion: v1
+data:
+  config.yaml: QUxMT1di....fUFVMQ19TVEFMRV9USU1FOiA2MG0KVEVTVElORzogZmFsc2UK
+kind: Secret
+metadata:
+  creationTimestamp: "2022-07-07T04:35:05Z"
+  generateName: example-registry-config-bundle-
+  name: example-registry-config-bundle-zxgw7
+  namespace: quay
+  ownerReferences:
+  - apiVersion: quay.redhat.com/v1
+    kind: QuayRegistry
+    name: example-registry
+    uid: b1c51bc0-237a-4d76-9b58-00722ab92904
+  resourceVersion: "687913"
+  uid: 09289cca-9ea4-4a86-b538-2829c35c4b39
+type: Opaque
+
+
+# echo QUxMT1dfUFV...FMRV9USU1FOiA2MG0KVEVTVElORzogZmFsc2UK | base64 -d
+ALLOW_PULLS_WITHOUT_STRICT_LOGGING: false
+AUTHENTICATION_TYPE: Database
+DEFAULT_TAG_EXPIRATION: 2w
+ENTERPRISE_LOGO_URL: /static/img/RH_Logo_Quay_Black_UX-horizontal.svg
+FEATURE_BUILD_SUPPORT: false
+FEATURE_DIRECT_LOGIN: true
+FEATURE_MAILING: false
+REGISTRY_TITLE: Red Hat Quay
+REGISTRY_TITLE_SHORT: Red Hat Quay
+SETUP_COMPLETE: true
+TAG_EXPIRATION_OPTIONS:
+- 2w
+TEAM_RESYNC_STALE_TIME: 60m
+TESTING: false
+
+```
+
+Create noobaa object bucket claims from Web UI under storage
+
+Endpoint
+
+    s3.openshift-storage.svc:443
+
+Bucket Name
+
+    my-object-bucket-01-faf5e98c-a939-40c4-908e-4d4898e825c1
+
+Access Key
+
+    ZUG1htewOHGiDT56jMWA
+
+Secret Key
+
+    SOHQOHpk0/69gtV8nGiAYn+tVLNcUaI//Ct96Gp3
+
+**Create Quay config.yaml**
+
+```
+# vim config.yaml
+[root@localhost noobaa]# cat config.yaml
+DISTRIBUTED_STORAGE_CONFIG:
+    default:
+        - RHOCSStorage
+        - access_key: ZUG1htewOHGiDT56jMWA
+          bucket_name: my-object-bucket-01-faf5e98c-a939-40c4-908e-4d4898e825c1
+          hostname: s3.openshift-storage.svc
+          is_secure: ture
+          port: "443"
+          secret_key: SOHQOHpk0/69gtV8nGiAYn+tVLNcUaI//Ct96Gp3
+          storage_path: /datastorage/registry
+DISTRIBUTED_STORAGE_DEFAULT_LOCATIONS: []
+DISTRIBUTED_STORAGE_PREFERENCE:
+    - default
+
+
+# oc create secret generic config-bundle-secret --from-file config.yaml=./config.yaml
+
+# oc delete QuayRegistry example-registry
+
+# cat quayregistry.yaml
+apiVersion: quay.redhat.com/v1
+kind: QuayRegistry
+metadata:
+  name: example-registry
+  namespace: quay
+spec:
+  configBundleSecret: config-bundle-secret
+  components:
+    - managed: true
+      kind: clair
+    - managed: true
+      kind: postgres
+    - managed: false
+      kind: objectstorage
+    - managed: true
+      kind: redis
+    - managed: true
+      kind: horizontalpodautoscaler
+    - managed: true
+      kind: route
+    - managed: true
+      kind: mirror
+    - managed: true
+      kind: monitoring
+    - managed: true
+      kind: tls
+    - managed: true
+      kind: quay
+    - managed: true
+      kind: clairpostgres
+
+# oc apply -f quayregistry.yaml
+
+
+```
