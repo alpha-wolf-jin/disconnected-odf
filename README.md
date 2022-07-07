@@ -1330,5 +1330,71 @@ spec:
 
 # oc apply -f quayregistry.yaml
 
+# oc get ObjectBucketClaim
+NAME                  STORAGE-CLASS                 PHASE   AGE
+my-object-bucket-01   openshift-storage.noobaa.io   Bound   3h2m
+
+# oc get pvc
+NAME                              STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS      AGE
+example-registry-clair-postgres   Bound    pvc-8d3c5ebf-8ed2-4f15-8d65-4ea04deb493a   50Gi       RWO            managed-premium   21m
+example-registry-quay-database    Bound    pvc-19f02d95-c4e3-46a7-b8d5-83741c4dd67d   50Gi       RWO            managed-premium   21m
 
 ```
+> Note: quay uses noobaa when doing default web installation
+
+**Change the default SC**
+
+```
+# oc get sc managed-premium -o yaml
+allowVolumeExpansion: true
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+  creationTimestamp: "2022-07-07T04:13:14Z"
+  name: managed-premium
+  resourceVersion: "673148"
+  uid: fe512222-655a-42ff-9c2e-51a5c2a1007d
+parameters:
+  kind: Managed
+  storageaccounttype: Premium_LRS
+provisioner: kubernetes.io/azure-disk
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+
+# oc delete QuayRegistry example-registry
+    storageclass.kubernetes.io/is-default-class: "false"
+
+# oc get sc
+NAME                          PROVISIONER                             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+managed-csi                   disk.csi.azure.com                      Delete          WaitForFirstConsumer   true                   3h25m
+managed-premium               kubernetes.io/azure-disk                Delete          WaitForFirstConsumer   true                   3h26m
+ocs-storagecluster-ceph-rbd   openshift-storage.rbd.csi.ceph.com      Delete          Immediate              true                   3d
+ocs-storagecluster-cephfs     openshift-storage.cephfs.csi.ceph.com   Delete          Immediate              true                   3d
+odflocalvolume01              kubernetes.io/no-provisioner            Delete          WaitForFirstConsumer   false                  3d
+openshift-storage.noobaa.io   openshift-storage.noobaa.io/obc         Delete          Immediate              false                  2d22h
+
+# oc edit sc ocs-storagecluster-ceph-rbd
+ annotations:
+    description: Provides RWO Filesystem volumes, and RWO and RWX Block volumes
+    storageclass.kubernetes.io/is-default-class: "true"
+
+```
+
+**Create quay instance from web UI with default value**
+
+```
+# oc get pvc -n quay
+NAME                              STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS                  AGE
+example-registry-clair-postgres   Bound    pvc-9897a5a9-8de4-474a-9aa2-7169527da939   50Gi       RWO            ocs-storagecluster-ceph-rbd   102s
+example-registry-quay-database    Bound    pvc-ee1ab9b1-df76-4647-8729-3156382b3895   50Gi       RWO            ocs-storagecluster-ceph-rbd   102s
+
+# oc get ObjectBucketClaim  -n quay
+NAME                              STORAGE-CLASS                 PHASE   AGE
+example-registry-quay-datastore   openshift-storage.noobaa.io   Bound   2m4s
+my-object-bucket-01               openshift-storage.noobaa.io   Bound   3h12m
+
+```
+
+**Now, all storages for quay come from ODF**
