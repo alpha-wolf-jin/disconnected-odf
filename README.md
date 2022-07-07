@@ -1290,7 +1290,7 @@ DISTRIBUTED_STORAGE_PREFERENCE:
 ```
 
 
-**Delete QuayRegistry and recreate with new config.yaml**
+**Delete old QuayRegistry  instance and recreate new one  with new config.yaml**
 
 ```
 
