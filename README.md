@@ -1264,6 +1264,8 @@ Secret Key
 
     SOHQOHpk0/69gtV8nGiAYn+tVLNcUaI//Ct96Gp3
 
+# Re-creat quay instance with new noobaa
+
 **Create Quay config.yaml**
 
 ```
@@ -1285,6 +1287,12 @@ DISTRIBUTED_STORAGE_PREFERENCE:
 
 
 # oc create secret generic config-bundle-secret --from-file config.yaml=./config.yaml
+```
+
+
+**Delete QuayRegistry and recreate with new config.yaml**
+
+```
 
 # oc delete QuayRegistry example-registry
 
