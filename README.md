@@ -18,6 +18,41 @@ git add . ; git commit -a -m "update README" ; git push -u origin main
 
 https://docs.openshift.com/container-platform/4.10/operators/admin/olm-restricted-networks.html
 
+**Registry rootCA file on node**
+```
+sh-4.4# ls -l /etc/docker/certs.d/    
+total 0
+drwxr-xr-x. 2 containers root 20 Jul 15 13:19 image-registry.openshift-image-registry.svc.cluster.local:5000
+drwxr-xr-x. 2 containers root 20 Jul 15 13:19 image-registry.openshift-image-registry.svc:5000
+drwxr-xr-x. 2 containers root 20 Jul 16 15:44 quay.example.opentlc.com:8443
+sh-4.4# ls -l /etc/docker/certs.d/quay.example.opentlc.com\:8443/ca.crt 
+-rw-r--r--. 1 containers root 1383 Jul 16 15:44 /etc/docker/certs.d/quay.example.opentlc.com:8443/ca.crt
+```
+
+**Registry Mapping file on node**
+```
+sh-4.4# less /etc/containers/registries.conf
+unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
+short-name-mode = ""
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/odf4/cephcsi-rhel8"
+  mirror-by-digest-only = true
+
+  [[registry.mirror]]
+    location = "quay.example.opentlc.com:8443/olm-mirror/odf4-cephcsi-rhel8"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/odf4/mcg-core-rhel8"
+  mirror-by-digest-only = true
+
+  [[registry.mirror]]
+    location = "quay.example.opentlc.com:8443/olm-mirror/odf4-mcg-core-rhel8"
+    ...
+```
+
 ## Create quay mirror registry
 
 https://github.com/alpha-wolf-jin/quay-mirrot-registry
