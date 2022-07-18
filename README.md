@@ -1460,7 +1460,7 @@ Refer: https://access.redhat.com/documentation/en-us/red_hat_openshift_data_foun
 
 ```
 
-# udpate Quay
+# udpate Quay tolerations
 
 ```
 # oc get deployment -n mha-quay
