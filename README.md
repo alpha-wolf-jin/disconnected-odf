@@ -1459,3 +1459,41 @@ Refer: https://access.redhat.com/documentation/en-us/red_hat_openshift_data_foun
 
 
 ```
+
+# udpate Quay
+
+```
+# oc get deployment -n mha-quay
+NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE
+example-registry-clair-app            2/2     2            2           15h
+example-registry-clair-postgres       1/1     1            1           15h
+example-registry-quay-app             0/0     0            0           15h
+example-registry-quay-config-editor   1/1     1            1           15h
+example-registry-quay-database        1/1     1            1           15h
+example-registry-quay-mirror          0/2     2            0           15h
+example-registry-quay-redis           1/1     1            1           15h
+
+# oc edit deployment example-registry-clair-postgres -n mha-quay
+
+...
+spec:
+  template:
+    spec:
+      tolerations:
+      - effect: NoSchedule
+        key: node.ocs.openshift.io/storage
+        operator: Equal
+        value: "true"
+      containers:
+      ...
+
+# oc edit deployment.apps/example-registry-quay-app
+
+# oc edit deployment.apps/example-registry-quay-config-editor
+
+# oc edit deployment.apps/example-registry-quay-database
+
+# oc edit deployment.apps/example-registry-quay-redis
+
+
+```
