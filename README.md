@@ -1433,3 +1433,29 @@ my-object-bucket-01               openshift-storage.noobaa.io   Bound   3h12m
 ```
 
 **Now, all storages for quay come from ODF**
+
+# 7.3. Manual creation of infrastructure nodes
+
+Refer: https://access.redhat.com/documentation/en-us/red_hat_openshift_data_foundation/4.10/html-single/managing_and_allocating_storage_resources/index#how-to-use-dedicated-worker-nodes-for-openshift-data-foundation_rhodf
+
+```
+[root@quay ~]# oc label node aro-k4j2l-worker-eastus-1 node-role.kubernetes.io/infra=""
+
+[root@quay ~]# oc label node aro-k4j2l-worker-eastus-2 node-role.kubernetes.io/infra=""
+
+[root@quay ~]# oc label node aro-k4j2l-worker-eastus-3 node-role.kubernetes.io/infra=""
+
+[root@quay ~]# oc adm taint node aro-k4j2l-worker-eastus-1 node.ocs.openshift.io/storage="true":NoSchedule
+
+[root@quay ~]# oc adm taint node aro-k4j2l-worker-eastus-2 node.ocs.openshift.io/storage="true":NoSchedule
+
+[root@quay ~]# oc adm taint node aro-k4j2l-worker-eastus-3 node.ocs.openshift.io/storage="true":NoSchedule
+
+[root@quay ~]# oc label node aro-k4j2l-worker-eastus-1 cluster.ocs.openshift.io/openshift-storage="" --overwrite
+
+[root@quay ~]# oc label node aro-k4j2l-worker-eastus-2 cluster.ocs.openshift.io/openshift-storage="" --overwrite
+
+[root@quay ~]# oc label node aro-k4j2l-worker-eastus-3 cluster.ocs.openshift.io/openshift-storage="" --overwrite
+
+
+```
