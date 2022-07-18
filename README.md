@@ -1495,5 +1495,25 @@ spec:
 
 # oc edit deployment.apps/example-registry-quay-redis
 
+# oc edit deployment.apps/prometheus-adapter -n openshift-monitoring # it will be auto restored back
+
+# oc edit statefulset.apps/prometheus-k8s
+
+[root@quay ~]# oc api-resources | grep prometheus
+prometheuses                                              monitoring.coreos.com/v1                      true         Prometheus
+prometheusrules                                           monitoring.coreos.com/v1                      true         PrometheusRule
+
+[root@quay ~]# oc get prometheuses -A
+NAMESPACE              NAME   VERSION   REPLICAS   AGE
+openshift-monitoring   k8s    2.32.1    2          20h
+
+# oc edit prometheuses k8s -n openshift-monitoring
+spec:
+  tolerations:
+  - effect: NoSchedule
+    key: node.ocs.openshift.io/storage
+    operator: Equal
+    value: "true"
+  containers:
 
 ```
